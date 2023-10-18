@@ -488,14 +488,18 @@ static uint8_t supported_commands(const void *cmd, uint16_t cmd_len,
 	tester_set_bit(rp->data, BTP_MESH_NET_SEND);
 	tester_set_bit(rp->data, BTP_MESH_HEALTH_GENERATE_FAULTS);
 	tester_set_bit(rp->data, BTP_MESH_HEALTH_CLEAR_FAULTS);
+#if defined(CONFIG_BT_MESH_LOW_POWER)
 	tester_set_bit(rp->data, BTP_MESH_LPN);
 	tester_set_bit(rp->data, BTP_MESH_LPN_POLL);
+#endif
 	tester_set_bit(rp->data, BTP_MESH_MODEL_SEND);
 
 	/* octet 2 */
 #if defined(CONFIG_BT_TESTING)
+#if defined(CONFIG_BT_MESH_LOW_POWER)
 	tester_set_bit(rp->data, BTP_MESH_LPN_SUBSCRIBE);
 	tester_set_bit(rp->data, BTP_MESH_LPN_UNSUBSCRIBE);
+#endif
 	tester_set_bit(rp->data, BTP_MESH_RPL_CLEAR);
 #endif /* CONFIG_BT_TESTING */
 	tester_set_bit(rp->data, BTP_MESH_PROXY_IDENTITY);
@@ -1553,6 +1557,7 @@ static uint8_t ivu_toggle_state(const void *cmd, uint16_t cmd_len,
 	return BTP_STATUS_SUCCESS;
 }
 
+#if defined(CONFIG_BT_MESH_LOW_POWER)
 static uint8_t lpn(const void *cmd, uint16_t cmd_len,
 		   void *rsp, uint16_t *rsp_len)
 {
@@ -1584,6 +1589,7 @@ static uint8_t lpn_poll(const void *cmd, uint16_t cmd_len,
 
 	return BTP_STATUS_SUCCESS;
 }
+#endif
 
 static uint8_t net_send(const void *cmd, uint16_t cmd_len,
 			void *rsp, uint16_t *rsp_len)
@@ -1765,6 +1771,7 @@ static uint8_t model_send(const void *cmd, uint16_t cmd_len,
 }
 
 #if defined(CONFIG_BT_TESTING)
+#if defined(CONFIG_BT_MESH_LOW_POWER)
 static uint8_t lpn_subscribe(const void *cmd, uint16_t cmd_len,
 			     void *rsp, uint16_t *rsp_len)
 {
@@ -1800,6 +1807,7 @@ static uint8_t lpn_unsubscribe(const void *cmd, uint16_t cmd_len,
 
 	return BTP_STATUS_SUCCESS;
 }
+#endif /* CONFIG_BT_MESH_LOW_POWER */
 
 static uint8_t rpl_clear(const void *cmd, uint16_t cmd_len,
 			 void *rsp, uint16_t *rsp_len)
@@ -4579,6 +4587,7 @@ static const struct btp_handler handlers[] = {
 		.expect_len = 0,
 		.func = ivu_toggle_state,
 	},
+#if defined(CONFIG_BT_MESH_LOW_POWER)
 	{
 		.opcode = BTP_MESH_LPN,
 		.expect_len = sizeof(struct btp_mesh_lpn_set_cmd),
@@ -4589,6 +4598,7 @@ static const struct btp_handler handlers[] = {
 		.expect_len = 0,
 		.func = lpn_poll,
 	},
+#endif
 	{
 		.opcode = BTP_MESH_NET_SEND,
 		.expect_len = BTP_HANDLER_LENGTH_VARIABLE,
@@ -4900,6 +4910,7 @@ static const struct btp_handler handlers[] = {
 		.func = va_del,
 	},
 #if defined(CONFIG_BT_TESTING)
+#if defined(CONFIG_BT_MESH_LOW_POWER)
 	{
 		.opcode = BTP_MESH_LPN_SUBSCRIBE,
 		.expect_len = sizeof(struct btp_mesh_lpn_subscribe_cmd),
@@ -4910,6 +4921,7 @@ static const struct btp_handler handlers[] = {
 		.expect_len = sizeof(struct btp_mesh_lpn_unsubscribe_cmd),
 		.func = lpn_unsubscribe,
 	},
+#endif
 	{
 		.opcode = BTP_MESH_RPL_CLEAR,
 		.expect_len = 0,
@@ -5316,6 +5328,7 @@ BT_MESH_FRIEND_CB_DEFINE(friend_cb) = {
 	.terminated = friend_terminated,
 };
 
+#if defined(CONFIG_BT_MESH_LOW_POWER)
 static void lpn_established(uint16_t net_idx, uint16_t friend_addr,
 					uint8_t queue_size, uint8_t recv_win)
 {
@@ -5353,6 +5366,7 @@ BT_MESH_LPN_CB_DEFINE(lpn_cb) = {
 	.terminated = lpn_terminated,
 	.polled = lpn_polled,
 };
+#endif
 
 uint8_t tester_init_mesh(void)
 {
