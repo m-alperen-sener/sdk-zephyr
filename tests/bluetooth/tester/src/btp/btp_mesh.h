@@ -96,6 +96,7 @@ struct btp_mesh_input_string_cmd {
 #define BTP_MESH_IVU_TEST_MODE			0x08
 struct btp_mesh_ivu_test_mode_cmd {
 	uint8_t enable;
+	uint8_t auto_disable;
 } __packed;
 
 #define BTP_MESH_IVU_TOGGLE_STATE		0x09
@@ -1143,3 +1144,15 @@ struct btp_mesh_model_recv_ev {
 } __packed;
 
 #define MESH_EV_BLOB_LOST_TARGET		0x90
+
+#define BTP_MESH_EV_SNB 0x91
+struct btp_mesh_snb_ev {
+	uint8_t flags;
+	uint32_t iv_idx;
+}__packed;
+
+#define BTP_MESH_EV_PRB 0x92
+struct btp_mesh_prb_ev {
+	uint8_t flags;
+	uint32_t iv_idx;
+}__packed;

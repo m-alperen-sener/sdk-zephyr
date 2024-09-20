@@ -18,6 +18,7 @@
 #include <sar_cfg_internal.h>
 #include <string.h>
 #include "mesh/access.h"
+#include "mesh/net.h"
 
 #include <zephyr/logging/log.h>
 #define LOG_MODULE_NAME bttester_mesh
@@ -1577,6 +1578,8 @@ static uint8_t input_string(const void *cmd, uint16_t cmd_len,
 	return BTP_STATUS_SUCCESS;
 }
 
+static bool ivu_test_auto_turn_off = false;
+
 static uint8_t ivu_test_mode(const void *cmd, uint16_t cmd_len,
 			     void *rsp, uint16_t *rsp_len)
 {
@@ -1585,6 +1588,7 @@ static uint8_t ivu_test_mode(const void *cmd, uint16_t cmd_len,
 	LOG_DBG("enable 0x%02x", cp->enable);
 
 	bt_mesh_iv_update_test(cp->enable ? true : false);
+	ivu_test_auto_turn_off = (cp->auto_disable ? true : false);
 
 	return BTP_STATUS_SUCCESS;
 }
@@ -5346,6 +5350,38 @@ static struct bt_test_cb bt_test_cb = {
 	.mesh_prov_invalid_bearer = invalid_bearer_cb,
 	.mesh_trans_incomp_timer_exp = incomp_timer_exp_cb,
 };
+
+#if defined(CONFIG_BT_TESTING)
+void snb_rec_cb(const struct bt_mesh_snb *snb)
+{
+	struct btp_mesh_snb_ev ev = {.flags = snb->flags, .iv_idx = snb->iv_idx};
+	LOG_DBG("SNB f:0x%02x iv: %d, %s", snb->flags, snb->iv_idx,
+		atomic_test_bit(bt_mesh.flags, BT_MESH_IVU_IN_PROGRESS) ? "in progress"
+									: "no progress");
+	if (ivu_test_auto_turn_off && (snb->flags == 0)) {
+		LOG_DBG("Turnoff test mode");
+		LOG_DBG("IV update %s", bt_mesh_iv_update() ? "complete" : "failed");
+		bt_mesh_iv_update_test(false);
+	}
+	tester_event(BTP_SERVICE_ID_MESH, BTP_MESH_EV_SNB, &ev, sizeof(ev));
+}
+
+void prb_rec_cb(const struct bt_mesh_prb *prb)
+{
+	struct btp_mesh_prb_ev ev = {.flags = prb->flags, .iv_idx = prb->iv_idx};
+	LOG_DBG("SNB f:0x%02x iv: %d, %s", prb->flags, prb->iv_idx,
+		atomic_test_bit(bt_mesh.flags, BT_MESH_IVU_IN_PROGRESS) ? "in progress"
+									: "no progress");
+	if (ivu_test_auto_turn_off && (prb->flags == 0)) {
+		LOG_DBG("Turnoff test mode");
+		LOG_DBG("IV update %s", bt_mesh_iv_update() ? "complete" : "failed");
+		bt_mesh_iv_update_test(false);
+	}
+	tester_event(BTP_SERVICE_ID_MESH, BTP_MESH_EV_PRB, &ev, sizeof(ev));
+}
+
+BT_MESH_BEACON_CB_DEFINE(beacon) = {.snb_received = snb_rec_cb, .priv_received = prb_rec_cb};
+#endif
 
 static void friend_established(uint16_t net_idx, uint16_t lpn_addr,
 			       uint8_t recv_delay, uint32_t polltimeout)
