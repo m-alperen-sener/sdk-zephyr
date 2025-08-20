@@ -577,6 +577,11 @@ struct btp_gap_periodic_biginfo_ev {
 	uint8_t framing;
 	uint8_t encryption;
 } __packed;
+#define BTP_GAP_EV_PEER_CAR_RECEIVED		0x98
+struct btp_gap_peer_car_status_ev {
+	bt_addr_le_t address;
+	uint8_t car;
+}__packed;
 
 #if defined(CONFIG_BT_EXT_ADV)
 struct bt_le_per_adv_param;
