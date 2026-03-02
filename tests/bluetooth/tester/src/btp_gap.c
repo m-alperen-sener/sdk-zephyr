@@ -2214,6 +2214,44 @@ static uint8_t padv_configure(const void *cmd, uint16_t cmd_len,
 	return BTP_STATUS_SUCCESS;
 }
 
+#if defined(CONFIG_BT_PER_ADV_RSP) || defined(CONFIG_BT_PER_ADV_SYNC_RSP)
+static uint8_t pawr_configure(const void *cmd, uint16_t cmd_len,
+	void *rsp, uint16_t *rsp_len)
+{
+	int err;
+	uint32_t options = BT_LE_PER_ADV_OPT_NONE;
+	const struct btp_gap_pawr_configure_cmd *cp = cmd;
+	struct btp_gap_padv_configure_rp *rp = rsp;
+
+	if (cp->flags & BTP_GAP_PADV_INCLUDE_TX_POWER) {
+		options |= BT_LE_PER_ADV_OPT_USE_TX_POWER;
+	}
+
+	struct bt_le_ext_adv *ext_adv = tester_gap_ext_adv_get(0);
+	struct bt_le_per_adv_param param = {
+	.interval_min = sys_le16_to_cpu(cp->interval_min),
+	.interval_max = sys_le16_to_cpu(cp->interval_max),
+	.options = options,
+	.num_subevents = cp->num_subevents,
+	.subevent_interval = cp->subevent_interval,
+	.response_slot_delay = cp->response_slot_delay,
+	.response_slot_spacing = cp->response_slot_spacing,
+	.num_response_slots = cp->num_response_slots,
+	};
+
+	err = tester_gap_padv_configure(ext_adv, &param);
+	if (err) {
+		return BTP_STATUS_FAILED;
+	}
+
+	rp->current_settings = sys_cpu_to_le32(current_settings);
+
+	*rsp_len = sizeof(*rp);
+
+	return BTP_STATUS_SUCCESS;
+}
+#endif /* CONFIG_BT_PER_ADV_RSP || CONFIG_BT_PER_ADV_SYNC_RSP */
+
 int tester_gap_padv_start(struct bt_le_ext_adv *ext_adv)
 {
 	int err;
@@ -3237,6 +3275,13 @@ static const struct btp_handler handlers[] = {
 		.func = padv_padv_sync_transfer_recv,
 	},
 #endif /* defined(CONFIG_BT_PER_ADV_SYNC_TRANSFER_RECEIVER) */
+#if defined(CONFIG_BT_PER_ADV_RSP) || defined(CONFIG_BT_PER_ADV_SYNC_RSP)
+	{
+		.opcode = BTP_GAP_PAWR_CONFIGURE,
+		.expect_len = sizeof(struct btp_gap_pawr_configure_cmd),
+		.func = pawr_configure,
+	},
+#endif /* defined(CONFIG_BT_PER_ADV_RSP) || defined(CONFIG_BT_PER_ADV_SYNC_RSP) */
 #endif /* defined(CONFIG_BT_PER_ADV) */
 #endif /* defined(CONFIG_BT_EXT_ADV) */
 #if defined(CONFIG_BT_RPA_TIMEOUT_DYNAMIC)
