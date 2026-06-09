@@ -15,7 +15,6 @@ tests:
     extra_args:
       - EXTRA_CONF_FILE=overlay-bt_ll_sw_split.conf
     platform_allow:
-      - nrf51dk/nrf51822
       - nrf52_bsim
       - nrf52dk/nrf52832
       - nrf52840dk/nrf52840
