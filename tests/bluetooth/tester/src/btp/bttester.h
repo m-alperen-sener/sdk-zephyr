@@ -145,9 +145,3 @@ uint8_t tester_unregister_ots(void);
 
 uint8_t tester_init_pbp(void);
 uint8_t tester_unregister_pbp(void);
-
-uint8_t tester_init_sdp(void);
-uint8_t tester_unregister_sdp(void);
-
-uint8_t tester_init_rfcomm(void);
-uint8_t tester_unregister_rfcomm(void);
